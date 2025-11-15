@@ -11,91 +11,116 @@
 <style>
 body{font-family:sans-serif;margin:0;padding:0;background:#f0f2f5;}
 header{background:#4a90e2;color:white;padding:1rem;text-align:center;}
-.container{padding:1rem;}
+.container{padding:1rem;max-width:800px;margin:0 auto;}
 .hidden{display:none;}
 button{margin:0.2rem;padding:0.5rem 1rem;background:#4a90e2;color:white;border:none;border-radius:5px;cursor:pointer;}
 button:hover{background:#357ab8;}
-input, textarea{width:100%;margin:0.3rem 0;padding:0.5rem;border-radius:5px;border:1px solid #ccc;}
+button:disabled{background:#ccc;cursor:not-allowed;}
+input, textarea{width:100%;margin:0.3rem 0;padding:0.5rem;border-radius:5px;border:1px solid #ccc;box-sizing:border-box;}
 .item-card{border:1px solid #ccc;border-radius:5px;padding:0.5rem;margin:0.5rem 0;background:white;}
 .item-card img{max-width:100%;border-radius:5px;}
-.chat-box{border:1px solid #ccc;border-radius:5px;padding:0.5rem;height:200px;overflow-y:scroll;background:white;}
+.chat-box{border:1px solid #ccc;border-radius:5px;padding:0.5rem;height:200px;overflow-y:scroll;background:white;margin:0.5rem 0;}
 .chat-input{display:flex;}
 .chat-input input{flex:1;margin-right:0.5rem;}
-.color-giver{background:#ffe0e0;}
-.color-taker{background:#e0ffe0;}
-.color-both{background:#e0e0ff;}
+.color-giver{background:#ffe0e0;padding:0.5rem;border-radius:5px;margin:0.5rem 0;}
+.color-taker{background:#e0ffe0;padding:0.5rem;border-radius:5px;margin:0.5rem 0;}
+.color-both{background:#e0e0ff;padding:0.5rem;border-radius:5px;margin:0.5rem 0;}
+.message{padding:0.5rem;margin:0.5rem 0;border-radius:5px;}
+.message.own{background:#d1f0ff;text-align:right;}
+.message.other{background:#f0f0f0;text-align:left;}
+.loading{text-align:center;padding:1rem;color:#666;}
+select{width:100%;margin:0.3rem 0;padding:0.5rem;border-radius:5px;border:1px solid #ccc;}
 </style>
 </head>
 <body>
-<header>Role-Based Item App</header>
-<div class="container" id="auth-container">
-<h2>Register / Login</h2>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
-<select id="role">
-<option value="giver">Giver</option>
-<option value="taker">Taker</option>
-<option value="both">Both</option>
-</select>
-<button id="registerBtn">Register</button>
-<button id="loginBtn">Login</button>
+
+<header id="app-header">
+  <h1>Role-Based Item App</h1>
+  <div id="user-info"></div>
+</header>
+
+<!-- Auth Page -->
+<div class="container" id="auth-page">
+  <h2>Register / Login</h2>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password (min 6 chars)">
+  <select id="role">
+    <option value="giver">Giver</option>
+    <option value="taker">Taker</option>
+    <option value="both">Both</option>
+  </select>
+  <button id="registerBtn">Register</button>
+  <button id="loginBtn">Login</button>
+  <div id="auth-msg" style="margin-top:1rem;color:#666;"></div>
 </div>
 
+<!-- Giver Page -->
 <div class="container hidden" id="giver-page">
-<h2 class="color-giver">Giver Page</h2>
-<h3>Your Items</h3>
-<div id="giver-items"></div>
-<h3>Upload Item</h3>
-<input type="text" id="giver-item-name" placeholder="Item Name">
-<input type="text" id="giver-item-desc" placeholder="Description">
-<input type="text" id="giver-item-location" placeholder="Location">
-<input type="file" id="giver-item-image">
-<button id="giver-upload">Upload</button>
-<button id="giver-logout">Logout</button>
+  <div class="color-giver">
+    <h2>Giver Page</h2>
+  </div>
+  <h3>Your Items</h3>
+  <div id="giver-items"></div>
+  <h3>Upload Item</h3>
+  <input type="text" id="giver-item-name" placeholder="Item Name">
+  <textarea id="giver-item-desc" placeholder="Description" rows="3"></textarea>
+  <input type="text" id="giver-item-location" placeholder="Location">
+  <input type="file" id="giver-item-image" accept="image/*">
+  <button id="giver-upload">Upload</button>
+  <button id="giver-logout">Logout</button>
 </div>
 
+<!-- Taker Page -->
 <div class="container hidden" id="taker-page">
-<h2 class="color-taker">Taker Page</h2>
-<h3>Browse Items</h3>
-<div id="browse-items"></div>
-<button id="taker-logout">Logout</button>
+  <div class="color-taker">
+    <h2>Taker Page</h2>
+  </div>
+  <h3>Browse Items</h3>
+  <div id="browse-items"></div>
+  <button id="taker-logout">Logout</button>
 </div>
 
+<!-- Both Page -->
 <div class="container hidden" id="both-page">
-<h2 class="color-both">Both Page</h2>
-<h3>Your Items</h3>
-<div id="both-items"></div>
-<h3>Upload Item</h3>
-<input type="text" id="both-item-name" placeholder="Item Name">
-<input type="text" id="both-item-desc" placeholder="Description">
-<input type="text" id="both-item-location" placeholder="Location">
-<input type="file" id="both-item-image">
-<button id="both-upload">Upload</button>
-<h3>Browse Items</h3>
-<div id="both-browse-items"></div>
-<button id="both-logout">Logout</button>
+  <div class="color-both">
+    <h2>Both Page</h2>
+  </div>
+  <h3>Your Items</h3>
+  <div id="both-items"></div>
+  <h3>Upload Item</h3>
+  <input type="text" id="both-item-name" placeholder="Item Name">
+  <textarea id="both-item-desc" placeholder="Description" rows="3"></textarea>
+  <input type="text" id="both-item-location" placeholder="Location">
+  <input type="file" id="both-item-image" accept="image/*">
+  <button id="both-upload">Upload</button>
+  <h3>Browse Items</h3>
+  <div id="both-browse-items"></div>
+  <button id="both-logout">Logout</button>
 </div>
 
+<!-- Item Detail Page -->
 <div class="container hidden" id="item-detail-page">
-<h2>Item Detail</h2>
-<div id="item-detail"></div>
-<button id="item-back">Back</button>
-<div class="chat-box" id="chat-box"></div>
-<div class="chat-input">
-<input type="text" id="chat-message" placeholder="Type message">
-<button id="send-chat">Send</button>
-</div>
+  <button id="item-back">← Back</button>
+  <h2>Item Detail</h2>
+  <div id="item-detail"></div>
+  <h3>Chat</h3>
+  <div class="chat-box" id="chat-box"></div>
+  <div class="chat-input">
+    <input type="text" id="chat-message" placeholder="Type message">
+    <button id="send-chat">Send</button>
+  </div>
 </div>
 
 <script>
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCB3TOwlnDAdh_x5NvLSCyORX_6oZbsZGc",
+  authDomain: "falaa-freebies.firebaseapp.com",
+  projectId: "falaa-freebies",
+  storageBucket: "falaa-freebies.appspot.com",
+  messagingSenderId: "842425176920",
+  appId: "1:842425176920:web:aa538c8212f12dd41fcb2d"
 };
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -104,165 +129,382 @@ const storage = firebase.storage();
 let currentUser = null;
 let currentRole = null;
 let currentItemId = null;
+let currentPage = 'auth';
 
-// Auth
-document.getElementById('registerBtn').onclick = async ()=>{
-  const email = document.getElementById('email').value;
+// Hide all pages
+function hideAllPages() {
+  document.getElementById('auth-page').classList.add('hidden');
+  document.getElementById('giver-page').classList.add('hidden');
+  document.getElementById('taker-page').classList.add('hidden');
+  document.getElementById('both-page').classList.add('hidden');
+  document.getElementById('item-detail-page').classList.add('hidden');
+}
+
+// Show specific page
+function showPage(page) {
+  hideAllPages();
+  currentPage = page;
+  document.getElementById(page + '-page').classList.remove('hidden');
+}
+
+// Register
+document.getElementById('registerBtn').onclick = async () => {
+  const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   const role = document.getElementById('role').value;
-  const user = await auth.createUserWithEmailAndPassword(email,password);
-  await db.collection('users').doc(user.user.uid).set({role:role});
+  
+  if (!email || password.length < 6) {
+    document.getElementById('auth-msg').textContent = 'Please enter valid email and password (min 6 chars)';
+    return;
+  }
+  
+  try {
+    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    await db.collection('users').doc(userCredential.user.uid).set({
+      email: email,
+      role: role,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('auth-msg').textContent = 'Account created! Logging in...';
+  } catch (error) {
+    document.getElementById('auth-msg').textContent = error.message;
+  }
 };
 
-document.getElementById('loginBtn').onclick = async ()=>{
-  const email = document.getElementById('email').value;
+// Login
+document.getElementById('loginBtn').onclick = async () => {
+  const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
-  const user = await auth.signInWithEmailAndPassword(email,password);
+  
+  if (!email || !password) {
+    document.getElementById('auth-msg').textContent = 'Please enter email and password';
+    return;
+  }
+  
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (error) {
+    document.getElementById('auth-msg').textContent = error.message;
+  }
 };
 
-auth.onAuthStateChanged(async user=>{
-  if(user){
+// Auth State Observer
+auth.onAuthStateChanged(async user => {
+  if (user) {
     currentUser = user;
-    const doc = await db.collection('users').doc(user.uid).get();
-    currentRole = doc.data().role;
-    document.getElementById('auth-container').classList.add('hidden');
-    if(currentRole==='giver') document.getElementById('giver-page').classList.remove('hidden');
-    if(currentRole==='taker') loadTakerPage();
-    if(currentRole==='both') loadBothPage();
-  }else{
-    document.getElementById('auth-container').classList.remove('hidden');
-    document.getElementById('giver-page').classList.add('hidden');
-    document.getElementById('taker-page').classList.add('hidden');
-    document.getElementById('both-page').classList.add('hidden');
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    currentRole = userDoc.data().role;
+    
+    document.getElementById('user-info').textContent = `Logged in as: ${user.email} (${currentRole})`;
+    
+    if (currentRole === 'giver') {
+      showPage('giver');
+      loadGiverItems();
+    } else if (currentRole === 'taker') {
+      showPage('taker');
+      loadTakerPage();
+    } else if (currentRole === 'both') {
+      showPage('both');
+      loadBothPage();
+    }
+  } else {
+    currentUser = null;
+    currentRole = null;
+    document.getElementById('user-info').textContent = '';
+    showPage('auth');
   }
 });
 
 // Logout
-document.getElementById('giver-logout').onclick = ()=>auth.signOut();
-document.getElementById('taker-logout').onclick = ()=>auth.signOut();
-document.getElementById('both-logout').onclick = ()=>auth.signOut();
+document.getElementById('giver-logout').onclick = () => auth.signOut();
+document.getElementById('taker-logout').onclick = () => auth.signOut();
+document.getElementById('both-logout').onclick = () => auth.signOut();
 
 // Upload Item
-async function uploadItem(name,desc,location,file,collection){
-  const ref = storage.ref().child(`items/${file.name}_${Date.now()}`);
-  await ref.put(file);
-  const url = await ref.getDownloadURL();
-  await db.collection(collection).add({
-    uid: currentUser.uid,
-    name:name,
-    desc:desc,
-    location:location,
-    image:url,
-    timestamp:firebase.firestore.FieldValue.serverTimestamp()
-  });
+async function uploadItem(name, desc, location, file, prefix) {
+  if (!name || !desc || !location || !file) {
+    alert('Please fill all fields and select an image');
+    return;
+  }
+  
+  const btn = document.getElementById(prefix + '-upload');
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+  
+  try {
+    const storageRef = storage.ref().child(`items/${currentUser.uid}/${Date.now()}_${file.name}`);
+    const snapshot = await storageRef.put(file);
+    const url = await snapshot.ref.getDownloadURL();
+    
+    await db.collection('items').add({
+      uid: currentUser.uid,
+      userEmail: currentUser.email,
+      name: name,
+      desc: desc,
+      location: location,
+      image: url,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      available: true
+    });
+    
+    document.getElementById(prefix + '-item-name').value = '';
+    document.getElementById(prefix + '-item-desc').value = '';
+    document.getElementById(prefix + '-item-location').value = '';
+    document.getElementById(prefix + '-item-image').value = '';
+    
+    alert('Item uploaded successfully!');
+  } catch (error) {
+    alert('Error: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Upload';
+  }
 }
 
 // Giver Upload
-document.getElementById('giver-upload').onclick = ()=>{
-  const name = document.getElementById('giver-item-name').value;
-  const desc = document.getElementById('giver-item-desc').value;
-  const location = document.getElementById('giver-item-location').value;
+document.getElementById('giver-upload').onclick = () => {
+  const name = document.getElementById('giver-item-name').value.trim();
+  const desc = document.getElementById('giver-item-desc').value.trim();
+  const location = document.getElementById('giver-item-location').value.trim();
   const file = document.getElementById('giver-item-image').files[0];
-  uploadItem(name,desc,location,file,'items');
+  uploadItem(name, desc, location, file, 'giver');
 };
 
 // Both Upload
-document.getElementById('both-upload').onclick = ()=>{
-  const name = document.getElementById('both-item-name').value;
-  const desc = document.getElementById('both-item-desc').value;
-  const location = document.getElementById('both-item-location').value;
+document.getElementById('both-upload').onclick = () => {
+  const name = document.getElementById('both-item-name').value.trim();
+  const desc = document.getElementById('both-item-desc').value.trim();
+  const location = document.getElementById('both-item-location').value.trim();
   const file = document.getElementById('both-item-image').files[0];
-  uploadItem(name,desc,location,file,'items');
+  uploadItem(name, desc, location, file, 'both');
 };
 
-// Load Items
-function loadTakerPage(){
-  document.getElementById('taker-page').classList.remove('hidden');
-  db.collection('items').orderBy('timestamp').onSnapshot(snap=>{
-    const container = document.getElementById('browse-items');
-    container.innerHTML='';
-    snap.forEach(doc=>{
-      const data = doc.data();
-      const div = document.createElement('div');
-      div.classList.add('item-card');
-      div.innerHTML=`<h4>${data.name}</h4><img src='${data.image}'><p>${data.desc}</p><p>${data.location}</p><button onclick="openItemDetail('${doc.id}')">View & Interest</button>`;
-      container.appendChild(div);
+// Load Giver Items
+function loadGiverItems() {
+  db.collection('items')
+    .where('uid', '==', currentUser.uid)
+    .orderBy('timestamp', 'desc')
+    .onSnapshot(snapshot => {
+      const container = document.getElementById('giver-items');
+      container.innerHTML = '';
+      
+      if (snapshot.empty) {
+        container.innerHTML = '<div class="loading">No items yet</div>';
+        return;
+      }
+      
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement('div');
+        div.classList.add('item-card');
+        div.innerHTML = `
+          <h4>${data.name}</h4>
+          <img src="${data.image}" alt="${data.name}">
+          <p>${data.desc}</p>
+          <p><strong>Location:</strong> ${data.location}</p>
+          <button onclick="viewItemDetail('${doc.id}')">View Messages</button>
+          <button onclick="deleteItem('${doc.id}')">Delete</button>
+        `;
+        container.appendChild(div);
+      });
     });
-  });
 }
 
-function loadBothPage(){
-  document.getElementById('both-page').classList.remove('hidden');
-  db.collection('items').orderBy('timestamp').onSnapshot(snap=>{
-    const container = document.getElementById('both-browse-items');
-    container.innerHTML='';
-    snap.forEach(doc=>{
-      const data = doc.data();
-      const div = document.createElement('div');
-      div.classList.add('item-card');
-      div.innerHTML=`<h4>${data.name}</h4><img src='${data.image}'><p>${data.desc}</p><p>${data.location}</p><button onclick="openItemDetail('${doc.id}')">View & Interest</button>`;
-      container.appendChild(div);
+// Delete Item
+window.deleteItem = async function(itemId) {
+  if (!confirm('Delete this item?')) return;
+  try {
+    await db.collection('items').doc(itemId).delete();
+    alert('Item deleted');
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+};
+
+// Load Taker Page
+function loadTakerPage() {
+  db.collection('items')
+    .where('available', '==', true)
+    .orderBy('timestamp', 'desc')
+    .onSnapshot(snapshot => {
+      const container = document.getElementById('browse-items');
+      container.innerHTML = '';
+      
+      if (snapshot.empty) {
+        container.innerHTML = '<div class="loading">No items available</div>';
+        return;
+      }
+      
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.uid === currentUser.uid) return;
+        
+        const div = document.createElement('div');
+        div.classList.add('item-card');
+        div.innerHTML = `
+          <h4>${data.name}</h4>
+          <img src="${data.image}" alt="${data.name}">
+          <p>${data.desc}</p>
+          <p><strong>Location:</strong> ${data.location}</p>
+          <p><strong>Owner:</strong> ${data.userEmail}</p>
+          <button onclick="openItemDetail('${doc.id}')">View & Interest</button>
+        `;
+        container.appendChild(div);
+      });
     });
-  });
+}
+
+// Load Both Page
+function loadBothPage() {
   // Load own items
-  db.collection('items').where('uid','==',currentUser.uid).orderBy('timestamp').onSnapshot(snap=>{
-    const container = document.getElementById('both-items');
-    container.innerHTML='';
-    snap.forEach(doc=>{
-      const data = doc.data();
-      const div = document.createElement('div');
-      div.classList.add('item-card');
-      div.innerHTML=`<h4>${data.name}</h4><img src='${data.image}'><p>${data.desc}</p><p>${data.location}</p>`;
-      container.appendChild(div);
+  db.collection('items')
+    .where('uid', '==', currentUser.uid)
+    .orderBy('timestamp', 'desc')
+    .onSnapshot(snapshot => {
+      const container = document.getElementById('both-items');
+      container.innerHTML = '';
+      
+      if (snapshot.empty) {
+        container.innerHTML = '<div class="loading">No items yet</div>';
+        return;
+      }
+      
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement('div');
+        div.classList.add('item-card');
+        div.innerHTML = `
+          <h4>${data.name}</h4>
+          <img src="${data.image}" alt="${data.name}">
+          <p>${data.desc}</p>
+          <p><strong>Location:</strong> ${data.location}</p>
+          <button onclick="viewItemDetail('${doc.id}')">View Messages</button>
+          <button onclick="deleteItem('${doc.id}')">Delete</button>
+        `;
+        container.appendChild(div);
+      });
     });
-  });
+  
+  // Load all items
+  db.collection('items')
+    .where('available', '==', true)
+    .orderBy('timestamp', 'desc')
+    .onSnapshot(snapshot => {
+      const container = document.getElementById('both-browse-items');
+      container.innerHTML = '';
+      
+      if (snapshot.empty) {
+        container.innerHTML = '<div class="loading">No items available</div>';
+        return;
+      }
+      
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.uid === currentUser.uid) return;
+        
+        const div = document.createElement('div');
+        div.classList.add('item-card');
+        div.innerHTML = `
+          <h4>${data.name}</h4>
+          <img src="${data.image}" alt="${data.name}">
+          <p>${data.desc}</p>
+          <p><strong>Location:</strong> ${data.location}</p>
+          <p><strong>Owner:</strong> ${data.userEmail}</p>
+          <button onclick="openItemDetail('${doc.id}')">View & Interest</button>
+        `;
+        container.appendChild(div);
+      });
+    });
 }
 
-// Item Detail & Chat
-async function openItemDetail(id){
-  currentItemId=id;
-  document.getElementById('giver-page').classList.add('hidden');
-  document.getElementById('taker-page').classList.add('hidden');
-  document.getElementById('both-page').classList.add('hidden');
-  document.getElementById('item-detail-page').classList.remove('hidden');
+// Open Item Detail
+window.openItemDetail = async function(id) {
+  currentItemId = id;
+  showPage('item-detail');
+  
   const doc = await db.collection('items').doc(id).get();
   const data = doc.data();
-  document.getElementById('item-detail').innerHTML=`<h3>${data.name}</h3><img src='${data.image}'><p>${data.desc}</p><p>${data.location}</p>`;
+  
+  document.getElementById('item-detail').innerHTML = `
+    <h3>${data.name}</h3>
+    <img src="${data.image}" style="max-width:100%;border-radius:5px;">
+    <p>${data.desc}</p>
+    <p><strong>Location:</strong> ${data.location}</p>
+    <p><strong>Owner:</strong> ${data.userEmail}</p>
+  `;
+  
   loadChat();
-}
-
-document.getElementById('item-back').onclick=()=>{
-  document.getElementById('item-detail-page').classList.add('hidden');
-  if(currentRole==='giver') document.getElementById('giver-page').classList.remove('hidden');
-  if(currentRole==='taker') document.getElementById('taker-page').classList.remove('hidden');
-  if(currentRole==='both') document.getElementById('both-page').classList.remove('hidden');
-}
-
-// Chat
-function loadChat(){
-  const chatBox = document.getElementById('chat-box');
-  db.collection('items').doc(currentItemId).collection('chat').orderBy('timestamp')
-  .onSnapshot(snap=>{
-    chatBox.innerHTML='';
-    snap.forEach(doc=>{
-      const m = doc.data();
-      const p = document.createElement('p');
-      p.textContent=`${m.sender}: ${m.message}`;
-      chatBox.appendChild(p);
-      chatBox.scrollTop=chatBox.scrollHeight;
-    });
-  });
-}
-
-document.getElementById('send-chat').onclick=()=>{
-  const msg = document.getElementById('chat-message').value;
-  db.collection('items').doc(currentItemId).collection('chat').add({
-    sender:currentUser.email,
-    message:msg,
-    timestamp:firebase.firestore.FieldValue.serverTimestamp()
-  });
-  document.getElementById('chat-message').value='';
 };
+
+window.viewItemDetail = window.openItemDetail;
+
+// Back Button
+document.getElementById('item-back').onclick = () => {
+  if (currentRole === 'giver') {
+    showPage('giver');
+  } else if (currentRole === 'taker') {
+    showPage('taker');
+  } else if (currentRole === 'both') {
+    showPage('both');
+  }
+};
+
+// Load Chat
+function loadChat() {
+  db.collection('items').doc(currentItemId).collection('chat')
+    .orderBy('timestamp', 'asc')
+    .onSnapshot(snapshot => {
+      const chatBox = document.getElementById('chat-box');
+      chatBox.innerHTML = '';
+      
+      if (snapshot.empty) {
+        chatBox.innerHTML = '<div class="loading">No messages yet</div>';
+        return;
+      }
+      
+      snapshot.forEach(doc => {
+        const m = doc.data();
+        const isOwn = m.senderUid === currentUser.uid;
+        
+        const div = document.createElement('div');
+        div.classList.add('message');
+        div.classList.add(isOwn ? 'own' : 'other');
+        div.innerHTML = `<strong>${isOwn ? 'You' : m.sender}:</strong> ${m.message}`;
+        chatBox.appendChild(div);
+      });
+      
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+}
+
+// Send Chat
+document.getElementById('send-chat').onclick = async () => {
+  const msg = document.getElementById('chat-message').value.trim();
+  
+  if (!msg) return;
+  
+  try {
+    await db.collection('items').doc(currentItemId).collection('chat').add({
+      sender: currentUser.email,
+      senderUid: currentUser.uid,
+      message: msg,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    document.getElementById('chat-message').value = '';
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+};
+
+// Enter key to send
+document.getElementById('chat-message').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    document.getElementById('send-chat').click();
+  }
+});
 </script>
+
 </body>
 </html>
+Simply copy this entire code and save it as an .html file (e.g., app.html). It's a complete single-file application with your original CSS styling and proper page navigation! 🎉
