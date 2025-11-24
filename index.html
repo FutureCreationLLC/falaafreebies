@@ -1,140 +1,250 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Falaa Freebies</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- React & ReactDOM -->
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+<!-- React Router DOM -->
+<script src="https://unpkg.com/react-router-dom@6/umd/react-router-dom.development.js"></script>
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-<script src="https://js.paystack.co/v1/inline.js"></script>
-<style>
-body {font-family: Inter, sans-serif; margin: 0; background: #f5f6fa; color: #222;}
-header {padding: 1rem; background: #4a90e2; color: white; text-align: center; font-size: 1.3rem; font-weight: 600;}
-.container {max-width: 650px; margin: 0 auto; padding: 1rem;}
-.card {background: white; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 3px 10px rgba(0,0,0,0.08);} 
-input, select, textarea {width: 100%; padding: .8rem; margin: .4rem 0; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem;}
-button {width: 100%; padding: .9rem; margin-top: .6rem; background: #4a90e2; color: white; font-size: 1rem; border: none; border-radius: 10px; cursor: pointer;}
-button:disabled {background: #999;}
-.item {background: white; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.07);} 
-img {width: 100%; border-radius: 8px; margin: .5rem 0;}
-.hidden {display: none;}
-.title {font-size: 1.2rem; font-weight: 600; margin-bottom: .4rem;}
-</style>
+
+<!-- Babel -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<!-- TailwindCSS -->
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-<header>Falaa Freebies</header>
-<div class="container">
-<div id="auth-page" class="card">
-<div class="title">Register / Login</div>
-<input id="auth-email" type="email" placeholder="Email">
-<input id="auth-password" type="password" placeholder="Password (min 6 chars)">
-<select id="auth-role"></select>
-<select id="auth-country"></select>
-<button id="register-btn">Register</button>
-<button id="login-btn">Login</button>
-<div id="auth-msg" style="margin-top:.5rem; text-align:center; color:#444;"></div>
-</div>
-<div id="giver-page" class="hidden">
-<div class="title">Your Items</div>
-<div id="giver-items"></div>
-<div class="card">
-<div class="title">Upload Item</div>
-<input id="giver-name" placeholder="Item name">
-<textarea id="giver-desc" rows="3" placeholder="Description"></textarea>
-<input id="giver-location" placeholder="Location">
-<input id="giver-img" type="file" accept="image/*" capture="environment">
-<button id="giver-upload">Upload</button>
-</div>
-<button id="giver-logout">Logout</button>
-</div>
-<div id="taker-page" class="hidden">
-<div class="title">Available Items</div>
-<div id="taker-items"></div>
-<button id="taker-pay">Pay 15 GHS to Unlock</button>
-<button id="taker-logout">Logout</button>
-</div>
-<div id="both-page" class="hidden">
-<div class="title">Your Items</div>
-<div id="both-items"></div>
-<div class="card">
-<div class="title">Upload Item</div>
-<input id="both-name" placeholder="Item name">
-<textarea id="both-desc" rows="3" placeholder="Description"></textarea>
-<input id="both-location" placeholder="Location">
-<input id="both-img" type="file" accept="image/*" capture="environment">
-<button id="both-upload">Upload</button>
-</div>
-<button id="both-pay">Pay 10 GHS to Unlock</button>
-<button id="both-logout">Logout</button>
-</div>
-</div>
-<script>
-const african = ["Ghana","Nigeria","Kenya","South Africa","Uganda","Tanzania","Rwanda","Egypt","Morocco","Ethiopia","Zambia","Zimbabwe","Cameroon","Senegal","Gambia","Benin","Togo","Mali","Niger","Algeria","Tunisia","Libya","Sudan","South Sudan","Chad","Angola","Mozambique","Botswana","Namibia"];
-const roleSelect = document.getElementById("auth-role");
-roleSelect.innerHTML = `<option value="giver">Giver</option><option value="taker">Taker</option><option value="both">Both</option>`;
-const countrySelect = document.getElementById("auth-country");
-african.forEach(c=>{countrySelect.innerHTML += `<option>${c}</option>`});
+<body class="bg-gray-50">
+
+<div id="root"></div>
+
+<script type="text/babel">
+
+const { BrowserRouter, Routes, Route, useNavigate, Navigate } = ReactRouterDOM;
+
 const firebaseConfig = {
-apiKey: "AIzaSyCB3TOwlnDAdh_x5NvLSCyORX_6oZbsZGc",
-authDomain: "falaa-freebies.firebaseapp.com",
-projectId: "falaa-freebies",
-storageBucket: "falaa-freebies.firebasestorage.app",
-messagingSenderId: "842425176920",
-appId: "1:842425176920:web:aa538c8212f12dd41fcb2d"
-measurementId: "G-YQFW6R14L6"
+  apiKey: "AIzaSyCB3TOwlnDAdh_x5NvLSCyORX_6oZbsZGc",
+  authDomain: "falaa-freebies.firebaseapp.com",
+  projectId: "falaa-freebies",
+  storageBucket: "falaa-freebies.firebasestorage.app",
+  messagingSenderId: "842425176920",
+  appId: "1:842425176920:web:aa538c8212f12dd41fcb2d",
 };
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const st = firebase.storage();
-let user = null;
-let role = null;
-let country = null;
-function show(p){["auth","giver","taker","both"].forEach(x=>document.getElementById(x+"-page").classList.add("hidden"));document.getElementById(p+"-page").classList.remove("hidden");}
-document.getElementById("register-btn").onclick = async()=>{
-let e = authEmail.value.trim();
-let p = authPassword.value.trim();
-let r = authRole.value;
-let c = authCountry.value;
-if(!e||p.length<6)return authMsg.textContent="Fill all fields";
-try{
-let u = await auth.createUserWithEmailAndPassword(e,p);
-await db.collection("users").doc(u.user.uid).set({email:e, role:r, country:c, paid:false});
-authMsg.textContent = "Registration successful";
-}catch(err){authMsg.textContent=err.message;}
-};
-document.getElementById("login-btn").onclick = async()=>{
-let e = authEmail.value.trim();
-let p = authPassword.value.trim();
-try{await auth.signInWithEmailAndPassword(e,p);}catch(err){authMsg.textContent=err.message;}
-};
-auth.onAuthStateChanged(async u=>{
-if(!u){user=null;show("auth");return;}
-user=u;
-let d = await db.collection("users").doc(u.uid).get();
-role=d.data().role;
-country=d.data().country;
-let paid=d.data().paid;
-if(role=="giver")show("giver");
-if(role=="taker"){if(!paid)show("taker");else loadTaker();}
-if(role=="both"){if(!paid)show("both");else{loadBoth();}}
-loadGiver();
-});
-function upload(n,d,l,f,p){if(!n||!d||!l||!f)return;let b=document.getElementById(p+"-upload");b.disabled=true;b.textContent="Uploading";let rf=st.ref().child(`items/${user.uid}/${Date.now()}_${f.name}`);rf.put(f).then(s=>s.ref.getDownloadURL()).then(url=>{return db.collection("items").add({uid:user.uid,email:user.email,name:n,desc:d,location:l,image:url,country:country,timestamp:firebase.firestore.FieldValue.serverTimestamp(),available:true});}).then(()=>{b.disabled=false;b.textContent="Upload";document.getElementById(p+"-name").value="";document.getElementById(p+"-desc").value="";document.getElementById(p+"-location").value="";document.getElementById(p+"-img").value="";}).catch(()=>{b.disabled=false;b.textContent="Upload"});}
-document.getElementById("giver-upload").onclick=()=>upload(giverName.value,giverDesc.value,giverLocation.value,giverImg.files[0],"giver");
-document.getElementById("both-upload").onclick=()=>upload(bothName.value,bothDesc.value,bothLocation.value,bothImg.files[0],"both");
-function loadGiver(){if(!user)return;db.collection("items").where("uid","==",user.uid).orderBy("timestamp","desc").onSnapshot(s=>{giverItems.innerHTML="";s.forEach(doc=>{let d=doc.data();giverItems.innerHTML+=`<div class=item><div class=title>${d.name}</div><img src="${d.image}"><div>${d.desc}</div><div>${d.location}</div><button onclick=del('${doc.id}')>Delete</button></div>`});});}
-function loadBoth(){db.collection("items").where("country","==",country).orderBy("timestamp","desc").onSnapshot(s=>{bothItems.innerHTML="";s.forEach(doc=>{let d=doc.data();bothItems.innerHTML+=`<div class=item><div class=title>${d.name}</div><img src="${d.image}"><div>${d.desc}</div><div>${d.location}</div></div>`});});}
-function loadTaker(){db.collection("items").where("country","==",country).orderBy("timestamp","desc").onSnapshot(s=>{takerItems.innerHTML="";s.forEach(doc=>{let d=doc.data();if(d.uid!=user.uid)takerItems.innerHTML+=`<div class=item><div class=title>${d.name}</div><img src="${d.image}"><div>${d.desc}</div><div>${d.location}</div><div>${d.email}</div></div>`});});}
-window.del=id=>{db.collection("items").doc(id).get().then(doc=>st.refFromURL(doc.data().image).delete()).then(()=>db.collection("items").doc(id).delete());};
-document.getElementById("taker-pay").onclick=()=>pay(15,"taker");
-document.getElementById("both-pay").onclick=()=>pay(10,"both");
-function pay(amount,mode){let h=PaystackPop.setup({key:"YOUR_PAYSTACK_PUBLIC_KEY",email:user.email,amount:amount*100,currency:"GHS",callback:r=>{db.collection("users").doc(user.uid).update({paid:true}).then(()=>{if(mode=="taker")loadTaker();if(mode=="both")loadBoth();});}});h.openIframe();}
-document.getElementById("giver-logout").onclick=()=>auth.signOut();
-document.getElementById("taker-logout").onclick=()=>auth.signOut();
-document.getElementById("both-logout").onclick=()=>auth.signOut();
+const storage = firebase.storage();
+
+const africaCountries = [
+  "Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cabo Verde","Cameroon","Central African Republic","Chad","Comoros","Congo (Congo-Brazzaville)","Djibouti","Egypt","Equatorial Guinea","Eritrea","Eswatini","Ethiopia","Gabon","Gambia","Ghana","Guinea","Guinea-Bissau","Ivory Coast","Kenya","Lesotho","Liberia","Libya","Madagascar","Malawi","Mali","Mauritania","Mauritius","Morocco","Mozambique","Namibia","Niger","Nigeria","Rwanda","Sao Tome and Principe","Senegal","Seychelles","Sierra Leone","Somalia","South Africa","South Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe"
+];
+
+function App() {
+  const [user,setUser] = React.useState(null);
+  React.useEffect(()=> auth.onAuthStateChanged(u => setUser(u)), []);
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={user ? <Navigate to="/dashboard"/> : <SignUp />} />
+        <Route path="/signin" element={user ? <Navigate to="/dashboard"/> : <SignIn />} />
+        <Route path="/dashboard" element={user ? <Dashboard user={user}/> : <Navigate to="/" />} />
+        <Route path="/upload" element={user ? <Upload user={user}/> : <Navigate to="/" />} />
+        <Route path="/settings" element={user ? <Settings user={user}/> : <Navigate to="/" />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function SignUp() {
+  const [email,setEmail]=React.useState("");
+  const [password,setPassword]=React.useState("");
+  const [country,setCountry]=React.useState("");
+  const navigate = useNavigate();
+
+  const handleSignUp = async () => {
+    if(!email || !password || !country) return alert("Fill all fields");
+    const cred = await auth.createUserWithEmailAndPassword(email,password);
+    await db.collection("users").doc(cred.user.uid).set({
+      email,
+      country,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    navigate("/dashboard");
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <h1 className="text-2xl font-bold mb-4">Sign Up</h1>
+      <input type="email" placeholder="Email" className="mb-2 p-2 border rounded w-full" value={email} onChange={e=>setEmail(e.target.value)}/>
+      <input type="password" placeholder="Password" className="mb-2 p-2 border rounded w-full" value={password} onChange={e=>setPassword(e.target.value)}/>
+      <select className="mb-2 p-2 border rounded w-full" value={country} onChange={e=>setCountry(e.target.value)}>
+        <option value="">Select Country</option>
+        {africaCountries.map(c=><option key={c} value={c}>{c}</option>)}
+      </select>
+      <button onClick={handleSignUp} className="bg-blue-500 text-white px-4 py-2 rounded w-full">Sign Up</button>
+      <p className="mt-2">Already have an account? <span className="text-blue-500 cursor-pointer" onClick={()=>navigate("/signin")}>Sign In</span></p>
+    </div>
+  );
+}
+
+function SignIn() {
+  const [email,setEmail]=React.useState("");
+  const [password,setPassword]=React.useState("");
+  const navigate = useNavigate();
+
+  const handleSignIn = async () => {
+    if(!email || !password) return alert("Fill all fields");
+    await auth.signInWithEmailAndPassword(email,password);
+    navigate("/dashboard");
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <h1 className="text-2xl font-bold mb-4">Sign In</h1>
+      <input type="email" placeholder="Email" className="mb-2 p-2 border rounded w-full" value={email} onChange={e=>setEmail(e.target.value)}/>
+      <input type="password" placeholder="Password" className="mb-2 p-2 border rounded w-full" value={password} onChange={e=>setPassword(e.target.value)}/>
+      <button onClick={handleSignIn} className="bg-green-500 text-white px-4 py-2 rounded w-full">Sign In</button>
+      <p className="mt-2">Don't have an account? <span className="text-blue-500 cursor-pointer" onClick={()=>navigate("/")}>Sign Up</span></p>
+    </div>
+  );
+}
+
+function Dashboard({user}) {
+  const [items,setItems]=React.useState([]);
+  const [userData,setUserData]=React.useState(null);
+  const navigate = useNavigate();
+
+  React.useEffect(()=>{
+    const userRef = db.collection("users").doc(user.uid);
+    userRef.get().then(doc => setUserData(doc.data()));
+  }, [user]);
+
+  React.useEffect(()=>{
+    if(!userData) return;
+    const q = db.collection("items").where("country","==",userData.country).orderBy("createdAt","desc");
+    const unsubscribe = q.onSnapshot(snapshot=>{
+      setItems(snapshot.docs.map(doc=>({id:doc.id,...doc.data()})));
+    });
+    return ()=>unsubscribe();
+  }, [userData]);
+
+  return (
+    <div className="min-h-screen p-4">
+      <nav className="flex justify-between mb-4">
+        <div className="flex gap-2">
+          <button onClick={()=>navigate("/upload")} className="bg-blue-500 text-white px-3 py-1 rounded">+ Add Item</button>
+          <button onClick={()=>navigate("/settings")} className="bg-gray-500 text-white px-3 py-1 rounded">Settings</button>
+        </div>
+        <button onClick={()=>auth.signOut()} className="bg-red-500 text-white px-3 py-1 rounded">Sign Out</button>
+      </nav>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {items.map(item=><ItemCard key={item.id} item={item}/>)}
+      </div>
+    </div>
+  );
+}
+
+function ItemCard({item}) {
+  return (
+    <div className="border rounded p-2 shadow">
+      {item.imageURL && <img src={item.imageURL} alt="" className="w-full h-40 object-cover rounded"/>}
+      <p className="font-bold mt-2">{item.description}</p>
+      <p className="text-sm text-gray-600">{item.location}</p>
+    </div>
+  );
+}
+
+function Upload({user}) {
+  const [description,setDescription]=React.useState("");
+  const [location,setLocation]=React.useState("");
+  const [image,setImage]=React.useState(null);
+  const [progress,setProgress]=React.useState(0);
+  const [userData,setUserData]=React.useState(null);
+  const navigate = useNavigate();
+
+  React.useEffect(()=>{
+    db.collection("users").doc(user.uid).get().then(doc => setUserData(doc.data()));
+  }, [user]);
+
+  const handleUpload=()=>{
+    if(!description || !location || !image) return alert("Fill all fields");
+    const imageRef = storage.ref(`itemImages/${Date.now()}_${image.name}`);
+    const uploadTask = imageRef.put(image);
+    uploadTask.on("state_changed", snapshot=>{
+      setProgress(Math.floor(snapshot.bytesTransferred / snapshot.totalBytes * 100));
+    }, err=>{console.error(err)}, async ()=>{
+      const imageURL = await uploadTask.snapshot.ref.getDownloadURL();
+      await db.collection("items").add({
+        description,
+        location,
+        imageURL,
+        country: userData.country,
+        createdBy: user.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      setDescription(""); setLocation(""); setImage(null); setProgress(0);
+      navigate("/dashboard");
+    });
+  };
+
+  return (
+    <div className="min-h-screen p-4 flex flex-col gap-2">
+      <input type="text" placeholder="Description" className="p-2 border rounded" value={description} onChange={e=>setDescription(e.target.value)}/>
+      <input type="text" placeholder="Location" className="p-2 border rounded" value={location} onChange={e=>setLocation(e.target.value)}/>
+      <input type="file" accept="image/*" onChange={e=>setImage(e.target.files[0])}/>
+      {progress>0 && <p>Uploading: {progress}%</p>}
+      <button onClick={handleUpload} className="bg-blue-500 text-white p-2 rounded">Upload</button>
+    </div>
+  );
+}
+
+function Settings({user}) {
+  const [name,setName]=React.useState(""); 
+  const [photo,setPhoto]=React.useState(null); 
+  const [profileURL,setProfileURL]=React.useState("");
+
+  React.useEffect(()=>{
+    db.collection("users").doc(user.uid).get().then(docSnap=>{
+      if(docSnap.exists) setProfileURL(docSnap.data().profilePictureURL||"");
+    });
+  },[user]);
+
+  const handleSave=()=>{
+    if(photo){
+      const imageRef = storage.ref(`userProfilePictures/${user.uid}/${Date.now()}_${photo.name}`);
+      imageRef.put(photo).then(async snap=>{
+        const url = await snap.ref.getDownloadURL();
+        db.collection("users").doc(user.uid).set({profilePictureURL:url},{merge:true});
+        setProfileURL(url);
+      });
+    }
+    if(name) auth.currentUser.updateProfile({displayName:name});
+    alert("Profile updated");
+  };
+
+  return (
+    <div className="min-h-screen p-4 flex flex-col gap-2">
+      <input type="text" placeholder="Name" className="p-2 border rounded" value={name} onChange={e=>setName(e.target.value)}/>
+      <input type="file" accept="image/*" onChange={e=>setPhoto(e.target.files[0])}/>
+      {profileURL && <img src={profileURL} alt="" className="w-32 h-32 object-cover rounded-full"/>}
+      <button onClick={handleSave} className="bg-green-500 text-white p-2 rounded">Save Profile</button>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
 </script>
 </body>
 </html>
