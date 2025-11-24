@@ -77,12 +77,13 @@ roleSelect.innerHTML = `<option value="giver">Giver</option><option value="taker
 const countrySelect = document.getElementById("auth-country");
 african.forEach(c=>{countrySelect.innerHTML += `<option>${c}</option>`});
 const firebaseConfig = {
-apiKey: "YOUR_API_KEY",
-authDomain: "YOUR_AUTH_DOMAIN",
-projectId: "YOUR_PROJECT_ID",
-storageBucket: "YOUR_BUCKET",
-messagingSenderId: "YOUR_SENDER",
-appId: "YOUR_APP_ID"
+apiKey: "AIzaSyCB3TOwlnDAdh_x5NvLSCyORX_6oZbsZGc",
+authDomain: "falaa-freebies.firebaseapp.com",
+projectId: "falaa-freebies",
+storageBucket: "falaa-freebies.firebasestorage.app",
+messagingSenderId: "842425176920",
+appId: "1:842425176920:web:aa538c8212f12dd41fcb2d"
+measurementId: "G-YQFW6R14L6"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
