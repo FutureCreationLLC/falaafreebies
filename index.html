@@ -4,660 +4,156 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Falaa Freebies</title>
-
-<!-- React & ReactDOM -->
-<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-
-<!-- React Router DOM -->
-<script src="https://unpkg.com/react-router-dom@6/umd/react-router-dom.development.js"></script>
-
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-
-<!-- Babel -->
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-<!-- TailwindCSS -->
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50">
+<div id="app" class="min-h-screen flex items-center justify-center p-4"></div>
 
-<div id="root"></div>
-
-<script type="text/babel">
-
-const { BrowserRouter, Routes, Route, useNavigate, useParams, Navigate } = ReactRouterDOM;
-
-// ---------- Firebase Config ----------
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyCB3TOwlnDAdh_x5NvLSCyORX_6oZbsZGc",
   authDomain: "falaa-freebies.firebaseapp.com",
   projectId: "falaa-freebies",
-  storageBucket: "falaa-freebies.appspot.com",
+  storageBucket: "falaa-freebies.firebasestorage.app",
   messagingSenderId: "842425176920",
   appId: "1:842425176920:web:aa538c8212f12dd41fcb2d",
   measurementId: "G-YQFW6R14L6"
 };
-
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-// ---------- Africa Countries ----------
 const africaCountries = [
-  "Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cabo Verde","Cameroon","Central African Republic","Chad","Comoros","Congo (Congo-Brazzaville)","Djibouti","Egypt","Equatorial Guinea","Eritrea","Eswatini","Ethiopia","Gabon","Gambia","Ghana","Guinea","Guinea-Bissau","Ivory Coast","Kenya","Lesotho","Liberia","Libya","Madagascar","Malawi","Mali","Mauritania","Mauritius","Morocco","Mozambique","Namibia","Niger","Nigeria","Rwanda","Sao Tome and Principe","Senegal","Seychelles","Sierra Leone","Somalia","South Africa","South Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe"
+"Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cabo Verde","Cameroon","Central African Republic","Chad","Comoros","Congo (Congo-Brazzaville)","Djibouti","Egypt","Equatorial Guinea","Eritrea","Eswatini","Ethiopia","Gabon","Gambia","Ghana","Guinea","Guinea-Bissau","Ivory Coast","Kenya","Lesotho","Liberia","Libya","Madagascar","Malawi","Mali","Mauritania","Mauritius","Morocco","Mozambique","Namibia","Niger","Nigeria","Rwanda","Sao Tome and Principe","Senegal","Seychelles","Sierra Leone","Somalia","South Africa","South Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe"
 ];
 
-// ---------- App ----------
-function App() {
-  const [user,setUser] = React.useState(null);
-  React.useEffect(()=> auth.onAuthStateChanged(u => setUser(u)), []);
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={user ? <Navigate to="/dashboard"/> : <SignUp />} />
-        <Route path="/signin" element={user ? <Navigate to="/dashboard"/> : <SignIn />} />
-        <Route path="/dashboard" element={user ? <Dashboard user={user}/> : <Navigate to="/" />} />
-        <Route path="/upload" element={user ? <Upload user={user}/> : <Navigate to="/" />} />
-        <Route path="/settings" element={user ? <Settings user={user}/> : <Navigate to="/" />} />
-        <Route path="/chat/:chatId" element={user ? <Chat user={user}/> : <Navigate to="/" />} />
-      </Routes>
-    </BrowserRouter>
-  );
+let currentUser = null;
+const app = document.getElementById('app');
+
+function show(element){ app.innerHTML=''; app.appendChild(element); }
+
+function createInput(placeholder,type='text'){
+  const input=document.createElement('input');
+  input.type=type;
+  input.placeholder=placeholder;
+  input.className="p-2 border rounded w-full mb-2";
+  return input;
 }
 
-// ---------- SignUp ----------
-function SignUp() {
-  const [email,setEmail]=React.useState("");
-  const [password,setPassword]=React.useState("");
-  const [country,setCountry]=React.useState("");
-  const navigate = useNavigate();
-
-  const handleSignUp = async () => {
-    if(!email || !password || !country) return alert("Fill all fields");
-    const cred = await auth.createUserWithEmailAndPassword(email,password);
-    await db.collection("users").doc(cred.user.uid).set({
-      email,
-      country,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    navigate("/dashboard");
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-2xl font-bold mb-4">Sign Up</h1>
-      <input type="email" placeholder="Email" className="mb-2 p-2 border rounded w-full" value={email} onChange={e=>setEmail(e.target.value)}/>
-      <input type="password" placeholder="Password" className="mb-2 p-2 border rounded w-full" value={password} onChange={e=>setPassword(e.target.value)}/>
-      <select className="mb-2 p-2 border rounded w-full" value={country} onChange={e=>setCountry(e.target.value)}>
-        <option value="">Select Country</option>
-        {africaCountries.map(c=><option key={c} value={c}>{c}</option>)}
-      </select>
-      <button onClick={handleSignUp} className="bg-blue-500 text-white px-4 py-2 rounded w-full">Sign Up</button>
-      <p className="mt-2">Already have an account? <span className="text-blue-500 cursor-pointer" onClick={()=>navigate("/signin")}>Sign In</span></p>
-    </div>
-  );
+function createButton(text,onClick){
+  const btn=document.createElement('button');
+  btn.textContent=text;
+  btn.className="bg-blue-500 text-white px-4 py-2 rounded w-full mb-2";
+  btn.onclick=onClick;
+  return btn;
 }
 
-// ---------- SignIn ----------
-function SignIn() {
-  const [email,setEmail]=React.useState("");
-  const [password,setPassword]=React.useState("");
-  const navigate = useNavigate();
-
-  const handleSignIn = async () => {
-    if(!email || !password) return alert("Fill all fields");
-    await auth.signInWithEmailAndPassword(email,password);
-    navigate("/dashboard");
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-2xl font-bold mb-4">Sign In</h1>
-      <input type="email" placeholder="Email" className="mb-2 p-2 border rounded w-full" value={email} onChange={e=>setEmail(e.target.value)}/>
-      <input type="password" placeholder="Password" className="mb-2 p-2 border rounded w-full" value={password} onChange={e=>setPassword(e.target.value)}/>
-      <button onClick={handleSignIn} className="bg-green-500 text-white px-4 py-2 rounded w-full">Sign In</button>
-      <p className="mt-2">Don't have an account? <span className="text-blue-500 cursor-pointer" onClick={()=>navigate("/")}>Sign Up</span></p>
-    </div>
-  );
-}
-
-// ---------- Dashboard ----------
-function Dashboard({user}) {
-  const [items,setItems]=React.useState([]);
-  const [userData,setUserData]=React.useState(null);
-  const navigate = useNavigate();
-
-  React.useEffect(()=>{
-    db.collection("users").doc(user.uid).get().then(doc => setUserData(doc.data()));
-  }, [user]);
-
-  React.useEffect(()=>{
-    if(!userData) return;
-    const q = db.collection("items").where("country","==",userData.country).orderBy("createdAt","desc");
-    const unsubscribe = q.onSnapshot(snapshot=>{
-      setItems(snapshot.docs.map(doc=>({id:doc.id,...doc.data()})));
-    });
-    return ()=>unsubscribe();
-  }, [userData]);
-
-  return (
-    <div className="min-h-screen p-4">
-      <nav className="flex justify-between mb-4">
-        <div className="flex gap-2">
-          <button onClick={()=>navigate("/upload")} className="bg-blue-500 text-white px-3 py-1 rounded">+ Add Item</button>
-          <button onClick={()=>navigate("/settings")} className="bg-gray-500 text-white px-3 py-1 rounded">Settings</button>
-        </div>
-        <button onClick={()=>auth.signOut()} className="bg-red-500 text-white px-3 py-1 rounded">Sign Out</button>
-      </nav>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {items.map(item=><ItemCard key={item.id} item={item} currentUser={user}/>)}
-      </div>
-    </div>
-  );
-}
-
-// ---------- Item Card with Message ----------
-function ItemCard({item, currentUser}) {
-  const navigate = useNavigate();
-
-  const handleMessageOwner = async () => {
-    const participants = [currentUser.uid, item.createdBy].sort();
-    const chatQuery = await db.collection("chats")
-      .where("participants", "==", participants)
-      .get();
-
-    let chatId;
-    if(chatQuery.empty){
-      const docRef = await db.collection("chats").add({
-        participants,
-        lastMessage: "",
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      chatId = docRef.id;
-    } else {
-      chatId = chatQuery.docs[0].id;
+function showPinLogin(){
+  const container=document.createElement('div'); container.className="w-full max-w-sm";
+  const title=document.createElement('h1'); title.className="text-2xl font-bold mb-4 text-center"; title.textContent="Enter PIN to Unlock";
+  const pinInput=createInput("Enter your PIN","password");
+  const nameInput=createInput("Your Name (first time only)");
+  const countrySelect=document.createElement('select'); countrySelect.className="p-2 border rounded w-full mb-2";
+  const defaultOpt=document.createElement('option'); defaultOpt.value=""; defaultOpt.textContent="Select Country (first time)"; countrySelect.appendChild(defaultOpt);
+  africaCountries.forEach(c=>{ const opt=document.createElement('option'); opt.value=c; opt.textContent=c; countrySelect.appendChild(opt);});
+  const submitBtn=createButton("Unlock",async ()=>{
+    const pin=pinInput.value.trim(); if(!pin) return alert("Enter PIN");
+    const userDoc=await db.collection("users").doc(pin).get();
+    if(userDoc.exists){ currentUser={pin,...userDoc.data()}; showDashboard(); }
+    else{
+      const name=nameInput.value.trim(); const country=countrySelect.value;
+      if(!name||!country) return alert("Enter name and country to create PIN");
+      await db.collection("users").doc(pin).set({name,country});
+      currentUser={pin,name,country};
+      showDashboard();
     }
-    navigate(`/chat/${chatId}`);
-  };
-
-  return (
-    <div className="border rounded p-2 shadow flex flex-col">
-      {item.imageURL && <img src={item.imageURL} alt="" className="w-full h-40 object-cover rounded"/>}
-      <p className="font-bold mt-2">{item.description}</p>
-      <p className="text-sm text-gray-600">{item.location}</p>
-      <button onClick={handleMessageOwner} className="bg-green-500 text-white mt-2 p-1 rounded">Message Owner</button>
-    </div>
-  );
+  });
+  container.appendChild(title); container.appendChild(pinInput); container.appendChild(nameInput); container.appendChild(countrySelect); container.appendChild(submitBtn);
+  show(container);
 }
 
-// ---------- Upload ----------
-function Upload({user}) {
-  const [description,setDescription]=React.useState("");
-  const [location,setLocation]=React.useState("");
-  const [image,setImage]=React.useState(null);
-  const [progress,setProgress]=React.useState(0);
-  const [userData,setUserData]=React.useState(null);
-  const navigate = useNavigate();
+async function showDashboard(){
+  const container=document.createElement('div'); container.className="w-full max-w-4xl";
+  const header=document.createElement('div'); header.className="flex justify-between items-center mb-4";
+  const title=document.createElement('h1'); title.className="text-xl font-bold"; title.textContent=`Falaa Freebies - ${currentUser.country}`;
+  const logoutBtn=createButton("Logout",()=>{currentUser=null; showPinLogin();}); logoutBtn.className="bg-red-500 text-white px-3 py-1 rounded"; header.appendChild(title); header.appendChild(logoutBtn);
 
-  React.useEffect(()=>{
-    db.collection("users").doc(user.uid).get().then(doc => setUserData(doc.data()));
-  }, [user]);
-
-  const handleUpload=()=>{
-    if(!description || !location || !image) return alert("Fill all fields");
-    const imageRef = storage.ref(`itemImages/${Date.now()}_${image.name}`);
-    const uploadTask = imageRef.put(image);
-    uploadTask.on("state_changed", snapshot=>{
-      setProgress(Math.floor(snapshot.bytesTransferred / snapshot.totalBytes * 100));
-    }, err=>{console.error(err)}, async ()=>{
-      const imageURL = await uploadTask.snapshot.ref.getDownloadURL();
-      await db.collection("items").add({
-        description,
-        location,
-        imageURL,
-        country: userData.country,
-        createdBy: user.uid,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      setDescription(""); setLocation(""); setImage(null); setProgress(0);
-      navigate("/dashboard");
+  const uploadSection=document.createElement('div'); uploadSection.className="mb-4 p-4 border rounded";
+  const descInput=createInput("Item Description"); const locInput=createInput("Item Location"); const contactInput=createInput("Contact Number"); const fileInput=document.createElement('input'); fileInput.type="file"; fileInput.accept="image/*"; fileInput.className="mb-2";
+  const uploadBtn=createButton("Upload Item",async ()=>{
+    const description=descInput.value.trim(); const location=locInput.value.trim(); const contact=contactInput.value.trim(); const file=fileInput.files[0];
+    if(!description||!location||!contact||!file) return alert("Fill all fields");
+    const fileRef=storage.ref(`itemImages/${Date.now()}_${file.name}`); const uploadTask=fileRef.put(file);
+    uploadTask.on("state_changed",null,console.error,async ()=>{
+      const imageURL=await uploadTask.snapshot.ref.getDownloadURL();
+      const docRef=await db.collection("items").add({description,location,contact,country:currentUser.country,imageURL,createdBy:currentUser.pin,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      descInput.value=""; locInput.value=""; contactInput.value=""; fileInput.value="";
+      loadItems(itemsContainer);
     });
-  };
+  });
+  uploadSection.appendChild(descInput); uploadSection.appendChild(locInput); uploadSection.appendChild(contactInput); uploadSection.appendChild(fileInput); uploadSection.appendChild(uploadBtn);
 
-  return (
-    <div className="min-h-screen p-4 flex flex-col gap-2">
-      <input type="text" placeholder="Description" className="p-2 border rounded" value={description} onChange={e=>setDescription(e.target.value)}/>
-      <input type="text" placeholder="Location" className="p-2 border rounded" value={location} onChange={e=>setLocation(e.target.value)}/>
-      <input type="file" accept="image/*" onChange={e=>setImage(e.target.files[0])}/>
-      {progress>0 && <p>Uploading: {progress}%</p>}
-      <button onClick={handleUpload} className="bg-blue-500 text-white p-2 rounded">Upload</button>
-    </div>
-  );
+  const itemsContainer=document.createElement('div'); itemsContainer.className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4";
+  container.appendChild(header); container.appendChild(uploadSection); container.appendChild(itemsContainer);
+  show(container); loadItems(itemsContainer);
 }
 
-// ---------- Settings ----------
-function Settings({user}) {
-  const [name,setName]=React.useState(""); 
-  const [photo,setPhoto]=React.useState(null); 
-  const [profileURL,setProfileURL]=React.useState("");
+async function loadItems(container){
+  container.innerHTML="";
+  const snapshot=await db.collection("items").where("country","==",currentUser.country).orderBy("createdAt","desc").get();
+  snapshot.docs.forEach(doc=>{
+    const item=doc.data();
+    const card=document.createElement('div'); card.className="border rounded p-2 shadow flex flex-col";
+    if(item.imageURL){ const img=document.createElement('img'); img.src=item.imageURL; img.className="w-full h-40 object-cover rounded"; card.appendChild(img);}
+    const desc=document.createElement('p'); desc.className="font-bold mt-2"; desc.textContent=item.description;
+    const loc=document.createElement('p'); loc.className="text-sm text-gray-600"; loc.textContent=item.location;
 
-  React.useEffect(()=>{
-    db.collection("users").doc(user.uid).get().then(docSnap=>{
-      if(docSnap.exists) setProfileURL(docSnap.data().profilePictureURL||"");
+    const btn=document.createElement('button'); btn.textContent="I'm Interested"; btn.className="bg-green-500 text-white p-1 rounded mt-2"; 
+    btn.onclick=()=>{ showChat(item.createdBy,doc.id,item.description); };
+
+    card.appendChild(desc); card.appendChild(loc); card.appendChild(btn);
+    container.appendChild(card);
+  });
+}
+
+async function showChat(otherPin,itemId,itemDesc){
+  const container=document.createElement('div'); container.className="w-full max-w-md p-4";
+  const backBtn=createButton("Back",()=>{showDashboard();}); backBtn.className="bg-gray-500 text-white px-2 py-1 rounded mb-2";
+  const title=document.createElement('h2'); title.className="text-lg font-bold mb-2"; title.textContent=`Chat about "${itemDesc}"`;
+  const messagesDiv=document.createElement('div'); messagesDiv.className="h-64 overflow-y-auto border p-2 mb-2";
+
+  const input=createInput("Type message...");
+  const sendBtn=createButton("Send",async ()=>{
+    const text=input.value.trim(); if(!text) return;
+    const chatId=[currentUser.pin,otherPin].sort().join("_");
+    const chatRef=db.collection("chats").doc(chatId);
+    const chatDoc=await chatRef.get();
+    if(!chatDoc.exists) await chatRef.set({participants:[currentUser.pin,otherPin],lastUpdated:firebase.firestore.FieldValue.serverTimestamp()});
+    await chatRef.collection("messages").add({senderPin:currentUser.pin,text,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
+    input.value="";
+  });
+
+  container.appendChild(backBtn); container.appendChild(title); container.appendChild(messagesDiv); container.appendChild(input); container.appendChild(sendBtn);
+  show(container);
+
+  const chatId=[currentUser.pin,otherPin].sort().join("_");
+  db.collection("chats").doc(chatId).collection("messages").orderBy("timestamp").onSnapshot(snapshot=>{
+    messagesDiv.innerHTML="";
+    snapshot.docs.forEach(doc=>{
+      const msg=doc.data();
+      const msgDiv=document.createElement('div');
+      msgDiv.textContent=`${msg.senderPin===currentUser.pin?"You":"Other"}: ${msg.text}`;
+      msgDiv.className=msg.senderPin===currentUser.pin?"text-right text-blue-600":"text-left text-gray-800";
+      messagesDiv.appendChild(msgDiv);
+      messagesDiv.scrollTop=messagesDiv.scrollHeight;
     });
-  },[user]);
-
-  const handleSave=()=>{
-    if(photo){
-      const imageRef = storage.ref(`userProfilePictures/${user.uid}/${Date.now()}_${photo.name}`);
-      imageRef.put(photo).then(async snap=>{
-        const url = await snap.ref.getDownloadURL();
-        db.collection("users").doc(user.uid).set({profilePictureURL:url},{merge:true});
-        setProfileURL(url);
-      });
-    }
-    if(name) auth.currentUser.updateProfile({displayName:name});
-    alert("Profile updated");
-  };
-
-  return (
-    <div className="min-h-screen p-4 flex flex-col gap-2">
-      <input type="text" placeholder="Name" className="p-2 border rounded" value={name} onChange={e=>setName(e.target.value)}/>
-      <input type="file" accept="image/*" onChange={e=>setPhoto(e.target.files[0])}/>
-      {profileURL && <img src={profileURL} alt="" className="w-32 h-32 object-cover rounded-full"/>}
-      <button onClick={handleSave} className="bg-green-500 text-white p-2 rounded">Save Profile</button>
-    </div>
-  );
+  });
 }
 
-// ---------- Chat ----------
-function Chat({user}) {
-  const { chatId } = useParams();
-  const [messages,setMessages] = React.useState([]);
-  const [text,setText] = React.useState("");
-  const messagesEndRef = React.useRef(null);
-
-  React.useEffect(()=>{
-    const unsubscribe = db.collection("chats").doc(chatId)
-      .collection("messages").orderBy("timestamp")
-      .onSnapshot(snapshot=>{
-        setMessages(snapshot.docs.map(doc=>({id:doc.id,...doc.data()})));
-        messagesEndRef.current?.scrollIntoView({behavior:"smooth"});
-      });
-    return ()=>unsubscribe();
-  }, [chatId]);
-
-  const handleSend = async () => {
-    if(!text) return;
-    await db.collection("chats").doc(chatId).collection("messages").add({
-      sender: user.uid,
-      text,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    await db.collection("chats").doc(chatId).update({
-      lastMessage: text,
-      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    setText("");
-  };
-
-  return (
-    <div className="min-h-screen p-4 flex flex-col">
-      <div className="flex-1 overflow-y-auto mb-2 border rounded p-2">
-        {messages.map(msg=>(
-          <div key={msg.id} className={`p-1 my-1 rounded ${msg.sender===user.uid ? "bg-blue-200 self-end" : "bg-gray-200 self-start"}`}>
-            {msg.text}
-          </div>
-        ))}
-        <div ref={messagesEndRef}></div>
-      </div>
-      <div className="flex gap-2">
-        <input type="text" className="flex-1 p-2 border rounded" value={text} onChange={e=>setText(e.target.value)} placeholder="Type a message"/>
-        <button onClick={handleSend} className="bg-green-500 text-white p-2 rounded">Send</button>
-      </div>
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Falaa Freebies</title>
-
-<!-- React & ReactDOM -->
-<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-
-<!-- React Router DOM -->
-<script src="https://unpkg.com/react-router-dom@6/umd/react-router-dom.development.js"></script>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-
-<!-- Babel -->
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-<!-- TailwindCSS -->
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-50">
-
-<div id="root"></div>
-
-<script type="text/babel">
-
-const { BrowserRouter, Routes, Route, useNavigate, useParams, Navigate } = ReactRouterDOM;
-
-// ---------- Firebase Config ----------
-const firebaseConfig = {
-  apiKey: "AIzaSyCB3TOwlnDAdh_x5NvLSCyORX_6oZbsZGc",
-  authDomain: "falaa-freebies.firebaseapp.com",
-  projectId: "falaa-freebies",
-  storageBucket: "falaa-freebies.appspot.com",
-  messagingSenderId: "842425176920",
-  appId: "1:842425176920:web:aa538c8212f12dd41fcb2d",
-  measurementId: "G-YQFW6R14L6"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const storage = firebase.storage();
-
-// ---------- Africa Countries ----------
-const africaCountries = [
-  "Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cabo Verde","Cameroon","Central African Republic","Chad","Comoros","Congo (Congo-Brazzaville)","Djibouti","Egypt","Equatorial Guinea","Eritrea","Eswatini","Ethiopia","Gabon","Gambia","Ghana","Guinea","Guinea-Bissau","Ivory Coast","Kenya","Lesotho","Liberia","Libya","Madagascar","Malawi","Mali","Mauritania","Mauritius","Morocco","Mozambique","Namibia","Niger","Nigeria","Rwanda","Sao Tome and Principe","Senegal","Seychelles","Sierra Leone","Somalia","South Africa","South Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe"
-];
-
-// ---------- App ----------
-function App() {
-  const [user,setUser] = React.useState(null);
-  React.useEffect(()=> auth.onAuthStateChanged(u => setUser(u)), []);
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={user ? <Navigate to="/dashboard"/> : <SignUp />} />
-        <Route path="/signin" element={user ? <Navigate to="/dashboard"/> : <SignIn />} />
-        <Route path="/dashboard" element={user ? <Dashboard user={user}/> : <Navigate to="/" />} />
-        <Route path="/upload" element={user ? <Upload user={user}/> : <Navigate to="/" />} />
-        <Route path="/settings" element={user ? <Settings user={user}/> : <Navigate to="/" />} />
-        <Route path="/chat/:chatId" element={user ? <Chat user={user}/> : <Navigate to="/" />} />
-      </Routes>
-    </BrowserRouter>
-  );
-}
-
-// ---------- SignUp ----------
-function SignUp() {
-  const [email,setEmail]=React.useState("");
-  const [password,setPassword]=React.useState("");
-  const [country,setCountry]=React.useState("");
-  const navigate = useNavigate();
-
-  const handleSignUp = async () => {
-    if(!email || !password || !country) return alert("Fill all fields");
-    const cred = await auth.createUserWithEmailAndPassword(email,password);
-    await db.collection("users").doc(cred.user.uid).set({
-      email,
-      country,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    navigate("/dashboard");
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-2xl font-bold mb-4">Sign Up</h1>
-      <input type="email" placeholder="Email" className="mb-2 p-2 border rounded w-full" value={email} onChange={e=>setEmail(e.target.value)}/>
-      <input type="password" placeholder="Password" className="mb-2 p-2 border rounded w-full" value={password} onChange={e=>setPassword(e.target.value)}/>
-      <select className="mb-2 p-2 border rounded w-full" value={country} onChange={e=>setCountry(e.target.value)}>
-        <option value="">Select Country</option>
-        {africaCountries.map(c=><option key={c} value={c}>{c}</option>)}
-      </select>
-      <button onClick={handleSignUp} className="bg-blue-500 text-white px-4 py-2 rounded w-full">Sign Up</button>
-      <p className="mt-2">Already have an account? <span className="text-blue-500 cursor-pointer" onClick={()=>navigate("/signin")}>Sign In</span></p>
-    </div>
-  );
-}
-
-// ---------- SignIn ----------
-function SignIn() {
-  const [email,setEmail]=React.useState("");
-  const [password,setPassword]=React.useState("");
-  const navigate = useNavigate();
-
-  const handleSignIn = async () => {
-    if(!email || !password) return alert("Fill all fields");
-    await auth.signInWithEmailAndPassword(email,password);
-    navigate("/dashboard");
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-2xl font-bold mb-4">Sign In</h1>
-      <input type="email" placeholder="Email" className="mb-2 p-2 border rounded w-full" value={email} onChange={e=>setEmail(e.target.value)}/>
-      <input type="password" placeholder="Password" className="mb-2 p-2 border rounded w-full" value={password} onChange={e=>setPassword(e.target.value)}/>
-      <button onClick={handleSignIn} className="bg-green-500 text-white px-4 py-2 rounded w-full">Sign In</button>
-      <p className="mt-2">Don't have an account? <span className="text-blue-500 cursor-pointer" onClick={()=>navigate("/")}>Sign Up</span></p>
-    </div>
-  );
-}
-
-// ---------- Dashboard ----------
-function Dashboard({user}) {
-  const [items,setItems]=React.useState([]);
-  const [userData,setUserData]=React.useState(null);
-  const navigate = useNavigate();
-
-  React.useEffect(()=>{
-    db.collection("users").doc(user.uid).get().then(doc => setUserData(doc.data()));
-  }, [user]);
-
-  React.useEffect(()=>{
-    if(!userData) return;
-    const q = db.collection("items").where("country","==",userData.country).orderBy("createdAt","desc");
-    const unsubscribe = q.onSnapshot(snapshot=>{
-      setItems(snapshot.docs.map(doc=>({id:doc.id,...doc.data()})));
-    });
-    return ()=>unsubscribe();
-  }, [userData]);
-
-  return (
-    <div className="min-h-screen p-4">
-      <nav className="flex justify-between mb-4">
-        <div className="flex gap-2">
-          <button onClick={()=>navigate("/upload")} className="bg-blue-500 text-white px-3 py-1 rounded">+ Add Item</button>
-          <button onClick={()=>navigate("/settings")} className="bg-gray-500 text-white px-3 py-1 rounded">Settings</button>
-        </div>
-        <button onClick={()=>auth.signOut()} className="bg-red-500 text-white px-3 py-1 rounded">Sign Out</button>
-      </nav>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {items.map(item=><ItemCard key={item.id} item={item} currentUser={user}/>)}
-      </div>
-    </div>
-  );
-}
-
-// ---------- Item Card with Message ----------
-function ItemCard({item, currentUser}) {
-  const navigate = useNavigate();
-
-  const handleMessageOwner = async () => {
-    const participants = [currentUser.uid, item.createdBy].sort();
-    const chatQuery = await db.collection("chats")
-      .where("participants", "==", participants)
-      .get();
-
-    let chatId;
-    if(chatQuery.empty){
-      const docRef = await db.collection("chats").add({
-        participants,
-        lastMessage: "",
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      chatId = docRef.id;
-    } else {
-      chatId = chatQuery.docs[0].id;
-    }
-    navigate(`/chat/${chatId}`);
-  };
-
-  return (
-    <div className="border rounded p-2 shadow flex flex-col">
-      {item.imageURL && <img src={item.imageURL} alt="" className="w-full h-40 object-cover rounded"/>}
-      <p className="font-bold mt-2">{item.description}</p>
-      <p className="text-sm text-gray-600">{item.location}</p>
-      <button onClick={handleMessageOwner} className="bg-green-500 text-white mt-2 p-1 rounded">Message Owner</button>
-    </div>
-  );
-}
-
-// ---------- Upload ----------
-function Upload({user}) {
-  const [description,setDescription]=React.useState("");
-  const [location,setLocation]=React.useState("");
-  const [image,setImage]=React.useState(null);
-  const [progress,setProgress]=React.useState(0);
-  const [userData,setUserData]=React.useState(null);
-  const navigate = useNavigate();
-
-  React.useEffect(()=>{
-    db.collection("users").doc(user.uid).get().then(doc => setUserData(doc.data()));
-  }, [user]);
-
-  const handleUpload=()=>{
-    if(!description || !location || !image) return alert("Fill all fields");
-    const imageRef = storage.ref(`itemImages/${Date.now()}_${image.name}`);
-    const uploadTask = imageRef.put(image);
-    uploadTask.on("state_changed", snapshot=>{
-      setProgress(Math.floor(snapshot.bytesTransferred / snapshot.totalBytes * 100));
-    }, err=>{console.error(err)}, async ()=>{
-      const imageURL = await uploadTask.snapshot.ref.getDownloadURL();
-      await db.collection("items").add({
-        description,
-        location,
-        imageURL,
-        country: userData.country,
-        createdBy: user.uid,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      setDescription(""); setLocation(""); setImage(null); setProgress(0);
-      navigate("/dashboard");
-    });
-  };
-
-  return (
-    <div className="min-h-screen p-4 flex flex-col gap-2">
-      <input type="text" placeholder="Description" className="p-2 border rounded" value={description} onChange={e=>setDescription(e.target.value)}/>
-      <input type="text" placeholder="Location" className="p-2 border rounded" value={location} onChange={e=>setLocation(e.target.value)}/>
-      <input type="file" accept="image/*" onChange={e=>setImage(e.target.files[0])}/>
-      {progress>0 && <p>Uploading: {progress}%</p>}
-      <button onClick={handleUpload} className="bg-blue-500 text-white p-2 rounded">Upload</button>
-    </div>
-  );
-}
-
-// ---------- Settings ----------
-function Settings({user}) {
-  const [name,setName]=React.useState(""); 
-  const [photo,setPhoto]=React.useState(null); 
-  const [profileURL,setProfileURL]=React.useState("");
-
-  React.useEffect(()=>{
-    db.collection("users").doc(user.uid).get().then(docSnap=>{
-      if(docSnap.exists) setProfileURL(docSnap.data().profilePictureURL||"");
-    });
-  },[user]);
-
-  const handleSave=()=>{
-    if(photo){
-      const imageRef = storage.ref(`userProfilePictures/${user.uid}/${Date.now()}_${photo.name}`);
-      imageRef.put(photo).then(async snap=>{
-        const url = await snap.ref.getDownloadURL();
-        db.collection("users").doc(user.uid).set({profilePictureURL:url},{merge:true});
-        setProfileURL(url);
-      });
-    }
-    if(name) auth.currentUser.updateProfile({displayName:name});
-    alert("Profile updated");
-  };
-
-  return (
-    <div className="min-h-screen p-4 flex flex-col gap-2">
-      <input type="text" placeholder="Name" className="p-2 border rounded" value={name} onChange={e=>setName(e.target.value)}/>
-      <input type="file" accept="image/*" onChange={e=>setPhoto(e.target.files[0])}/>
-      {profileURL && <img src={profileURL} alt="" className="w-32 h-32 object-cover rounded-full"/>}
-      <button onClick={handleSave} className="bg-green-500 text-white p-2 rounded">Save Profile</button>
-    </div>
-  );
-}
-
-// ---------- Chat ----------
-function Chat({user}) {
-  const { chatId } = useParams();
-  const [messages,setMessages] = React.useState([]);
-  const [text,setText] = React.useState("");
-  const messagesEndRef = React.useRef(null);
-
-  React.useEffect(()=>{
-    const unsubscribe = db.collection("chats").doc(chatId)
-      .collection("messages").orderBy("timestamp")
-      .onSnapshot(snapshot=>{
-        setMessages(snapshot.docs.map(doc=>({id:doc.id,...doc.data()})));
-        messagesEndRef.current?.scrollIntoView({behavior:"smooth"});
-      });
-    return ()=>unsubscribe();
-  }, [chatId]);
-
-  const handleSend = async () => {
-    if(!text) return;
-    await db.collection("chats").doc(chatId).collection("messages").add({
-      sender: user.uid,
-      text,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    await db.collection("chats").doc(chatId).update({
-      lastMessage: text,
-      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    setText("");
-  };
-
-  return (
-    <div className="min-h-screen p-4 flex flex-col">
-      <div className="flex-1 overflow-y-auto mb-2 border rounded p-2">
-        {messages.map(msg=>(
-          <div key={msg.id} className={`p-1 my-1 rounded ${msg.sender===user.uid ? "bg-blue-200 self-end" : "bg-gray-200 self-start"}`}>
-            {msg.text}
-          </div>
-        ))}
-        <div ref={messagesEndRef}></div>
-      </div>
-      <div className="flex gap-2">
-        <input type="text" className="flex-1 p-2 border rounded" value={text} onChange={e=>setText(e.target.value)} placeholder="Type a message"/>
-        <button onClick={handleSend} className="bg-green-500 text-white p-2 rounded">Send</button>
-      </div>
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
+showPinLogin();
 </script>
 </body>
 </html>
