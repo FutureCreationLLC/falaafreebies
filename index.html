@@ -1,274 +1,139 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Role-Based Item App</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-    <script src="https://js.paystack.co/v1/inline.js"></script>
-    <style>
-        body {font-family: sans-serif; margin: 0; padding: 0; background: #ffe0e5;}
-        header {background: #4a90e2; color: white; padding: 1rem; text-align: center;}
-        .container {padding: 1rem; max-width: 800px; margin: 0 auto;}
-        .hidden {display: none;}
-        button {
-            margin: 0.2rem;
-            padding: 0.5rem 1rem;
-            background: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {background: #357ab8;}
-        button:disabled {background: #ccc; cursor: not-allowed;}
-        input, textarea, select {width: 100%; margin: 0.3rem 0; padding: 0.5rem; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;}
-        .tabs {display: flex; justify-content: space-around; margin-bottom: 1rem;}
-        .tab {cursor: pointer; padding: 0.5rem; background: #f0f0f0; border-radius: 5px;}
-        .tab.active {background: white; border: 1px solid #4a90e2;}
-        .item-card {border: 1px solid #ccc; border-radius: 5px; padding: 0.5rem; margin: 0.5rem 0; background: white;}
-        .loading {text-align: center; padding: 1rem; color: #666;}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Falaa Freebies</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<style>
+body {font-family: Inter, sans-serif; margin: 0; background: #f5f6fa; color: #222;}
+header {padding: 1rem; background: #4a90e2; color: white; text-align: center; font-size: 1.3rem; font-weight: 600;}
+.container {max-width: 650px; margin: 0 auto; padding: 1rem;}
+.card {background: white; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 3px 10px rgba(0,0,0,0.08);} 
+input, select, textarea {width: 100%; padding: .8rem; margin: .4rem 0; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem;}
+button {width: 100%; padding: .9rem; margin-top: .6rem; background: #4a90e2; color: white; font-size: 1rem; border: none; border-radius: 10px; cursor: pointer;}
+button:disabled {background: #999;}
+.item {background: white; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.07);} 
+img {width: 100%; border-radius: 8px; margin: .5rem 0;}
+.hidden {display: none;}
+.title {font-size: 1.2rem; font-weight: 600; margin-bottom: .4rem;}
+</style>
 </head>
 <body>
-
-<header id="app-header">
-    <h1>Falaa Freebies</h1>
-    <div id="user-info"></div>
-</header>
-
+<header>Falaa Freebies</header>
 <div class="container">
-    <div class="tabs">
-        <div class="tab active" id="auth-tab" onclick="showPage('auth')">Auth</div>
-        <div class="tab" id="giver-tab" onclick="showPage('giver')">Giver</div>
-        <div class="tab" id="taker-tab" onclick="showPage('taker')">Taker</div>
-        <div class="tab" id="both-tab" onclick="showPage('both')">Both</div>
-    </div>
-
-    <div id="auth-page">
-        <h2>Register / Login</h2>
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="password" id="password" placeholder="Password (min 6 chars)" required>
-        <select id="role">
-            <option value="giver">Giver</option>
-            <option value="taker">Taker</option>
-            <option value="both">Both</option>
-        </select>
-        <button id="registerBtn">Register</button>
-        <button id="loginBtn">Login</button>
-        <div id="auth-msg" style="margin-top: 1rem; color: #666;"></div>
-    </div>
-
-    <div class="hidden" id="giver-page">
-        <h2>Your Items (Giver)</h2>
-        <div id="giver-items"></div>
-        <h3>Upload Item</h3>
-        <input type="text" id="giver-item-name" placeholder="Item Name" required>
-        <textarea id="giver-item-desc" placeholder="Description" rows="3" required></textarea>
-        <input type="text" id="giver-item-location" placeholder="Location" required>
-        <input type="file" id="giver-item-image" accept="image/*" required>
-        <button id="giver-upload">Upload Item</button>
-        <button id="giver-logout">Logout</button>
-    </div>
-
-    <div class="hidden" id="taker-page">
-        <h2>Browse Items (Taker)</h2>
-        <div id="browse-items"></div>
-        <button id="paystack-button" onclick="paystackPayment()">Pay for Taker Registration</button>
-        <button id="taker-logout">Logout</button>
-    </div>
-
-    <div class="hidden" id="both-page">
-        <h2>Your Items (Both)</h2>
-        <div id="both-items"></div>
-        <h3>Upload Item</h3>
-        <input type="text" id="both-item-name" placeholder="Item Name" required>
-        <textarea id="both-item-desc" placeholder="Description" rows="3" required></textarea>
-        <input type="text" id="both-item-location" placeholder="Location" required>
-        <input type="file" id="both-item-image" accept="image/*" required>
-        <button id="both-upload">Upload Item</button>
-        <button id="both-logout">Logout</button>
-    </div>
-
+<div id="auth-page" class="card">
+<div class="title">Register / Login</div>
+<input id="auth-email" type="email" placeholder="Email">
+<input id="auth-password" type="password" placeholder="Password (min 6 chars)">
+<select id="auth-role"></select>
+<select id="auth-country"></select>
+<button id="register-btn">Register</button>
+<button id="login-btn">Login</button>
+<div id="auth-msg" style="margin-top:.5rem; text-align:center; color:#444;"></div>
 </div>
-
+<div id="giver-page" class="hidden">
+<div class="title">Your Items</div>
+<div id="giver-items"></div>
+<div class="card">
+<div class="title">Upload Item</div>
+<input id="giver-name" placeholder="Item name">
+<textarea id="giver-desc" rows="3" placeholder="Description"></textarea>
+<input id="giver-location" placeholder="Location">
+<input id="giver-img" type="file" accept="image/*" capture="environment">
+<button id="giver-upload">Upload</button>
+</div>
+<button id="giver-logout">Logout</button>
+</div>
+<div id="taker-page" class="hidden">
+<div class="title">Available Items</div>
+<div id="taker-items"></div>
+<button id="taker-pay">Pay 15 GHS to Unlock</button>
+<button id="taker-logout">Logout</button>
+</div>
+<div id="both-page" class="hidden">
+<div class="title">Your Items</div>
+<div id="both-items"></div>
+<div class="card">
+<div class="title">Upload Item</div>
+<input id="both-name" placeholder="Item name">
+<textarea id="both-desc" rows="3" placeholder="Description"></textarea>
+<input id="both-location" placeholder="Location">
+<input id="both-img" type="file" accept="image/*" capture="environment">
+<button id="both-upload">Upload</button>
+</div>
+<button id="both-pay">Pay 10 GHS to Unlock</button>
+<button id="both-logout">Logout</button>
+</div>
+</div>
 <script>
-    // Firebase configuration
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",  // Replace with your Firebase API Key
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",  // Replace with your Auth Domain
-        projectId: "YOUR_PROJECT_ID",  // Replace with your Project ID
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",  // Replace with your Storage Bucket
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",  // Replace with your Messaging Sender ID
-        appId: "YOUR_APP_ID"  // Replace with your App ID
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const storage = firebase.storage();
-
-    let currentUser = null, currentRole = null;
-
-    function hideAllPages() {
-        ['auth', 'giver', 'taker', 'both'].forEach(id => document.getElementById(id + '-page').classList.add('hidden'));
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    }
-
-    function showPage(page) {
-        hideAllPages();
-        document.getElementById(page + '-page').classList.remove('hidden');
-        document.getElementById(page + '-tab').classList.add('active');
-    }
-
-    async function uploadItem(name, desc, location, file, prefix) {
-        if (!name || !desc || !location || !file) { alert('All fields required'); return; }
-        const btn = document.getElementById(prefix + '-upload'); btn.disabled = true; btn.textContent = 'Uploading...';
-        try {
-            const storageRef = storage.ref().child(`items/${currentUser.uid}/${Date.now()}_${file.name}`);
-            const snapshot = await storageRef.put(file);
-            const url = await snapshot.ref.getDownloadURL();
-            await db.collection('items').add({ uid: currentUser.uid, userEmail: currentUser.email, name, desc, location, image: url, timestamp: firebase.firestore.FieldValue.serverTimestamp(), available: true });
-            document.getElementById(prefix + '-item-name').value = ''; 
-            document.getElementById(prefix + '-item-desc').value = '';
-            document.getElementById(prefix + '-item-location').value = ''; 
-            document.getElementById(prefix + '-item-image').value = '';
-            alert('Item uploaded successfully.');
-        } catch (e) { alert('Error: ' + e.message); } finally { btn.disabled = false; btn.textContent = 'Upload Item'; }
-    }
-
-    document.getElementById('registerBtn').onclick = async () => {
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        const role = document.getElementById('role').value;
-        if (!email || password.length < 6) { document.getElementById('auth-msg').textContent = 'Enter valid email and password'; return; }
-        try {
-            const userCred = await auth.createUserWithEmailAndPassword(email, password);
-            await db.collection('users').doc(userCred.user.uid).set({ email, role, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-            document.getElementById('auth-msg').textContent = 'Registration successful!';
-        } catch (e) { document.getElementById('auth-msg').textContent = e.message; }
-    };
-
-    document.getElementById('loginBtn').onclick = async () => {
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        if (!email || !password) { document.getElementById('auth-msg').textContent = 'Enter email and password'; return; }
-        try {
-            await auth.signInWithEmailAndPassword(email, password);
-            document.getElementById('auth-msg').textContent = 'Login successful!';
-        } catch (e) { document.getElementById('auth-msg').textContent = e.message; }
-    };
-
-    auth.onAuthStateChanged(async user => {
-        if (user) {
-            currentUser = user;
-            const doc = await db.collection('users').doc(user.uid).get();
-            currentRole = doc.data().role;
-            document.getElementById('user-info').textContent = `Logged in as: ${user.email} (${currentRole})`;
-            if (currentRole === 'giver') { showPage('giver'); loadGiverItems(); }
-            else if (currentRole === 'taker') { showPage('taker'); loadTakerItems(); }
-            else if (currentRole === 'both') { showPage('both'); loadBothItems(); }
-        } else {
-            currentUser = null; currentRole = null; document.getElementById('user-info').textContent = '';
-            showPage('auth');
-        }
-    });
-
-    document.getElementById('giver-logout').onclick = () => auth.signOut();
-    document.getElementById('taker-logout').onclick = () => auth.signOut();
-    document.getElementById('both-logout').onclick = () => auth.signOut();
-    
-    // Giver and Both upload actions
-    document.getElementById('giver-upload').onclick = () => uploadItem(document.getElementById('giver-item-name').value.trim(), document.getElementById('giver-item-desc').value.trim(), document.getElementById('giver-item-location').value.trim(), document.getElementById('giver-item-image').files[0], 'giver');
-    document.getElementById('both-upload').onclick = () => uploadItem(document.getElementById('both-item-name').value.trim(), document.getElementById('both-item-desc').value.trim(), document.getElementById('both-item-location').value.trim(), document.getElementById('both-item-image').files[0], 'both');
-
-    function loadGiverItems() {
-        db.collection('items').where('uid', '==', currentUser.uid).orderBy('timestamp', 'desc').onSnapshot(snap => {
-            const c = document.getElementById('giver-items'); c.innerHTML = '';
-            if (snap.empty) { c.innerHTML = '<div class="loading">No items yet</div>'; return; }
-            snap.forEach(doc => {
-                const d = doc.data();
-                const div = document.createElement('div');
-                div.classList.add('item-card');
-                div.innerHTML = `
-                    <h4>${d.name}</h4>
-                    <img src="${d.image}" alt="${d.name}">
-                    <p>${d.desc}</p>
-                    <p><strong>Location:</strong> ${d.location}</p>
-                    <button onclick="deleteItem('${doc.id}')">Delete</button>`;
-                c.appendChild(div);
-            });
-        });
-    }
-
-    function loadTakerItems() {
-        db.collection('items').where('available', '==', true).orderBy('timestamp', 'desc').onSnapshot(snap => {
-            const c = document.getElementById('browse-items'); c.innerHTML = '';
-            if (snap.empty) { c.innerHTML = '<div class="loading">No items available</div>'; return; }
-            snap.forEach(doc => {
-                const d = doc.data(); if (d.uid === currentUser.uid) return;
-                const div = document.createElement('div'); div.classList.add('item-card');
-                div.innerHTML = `<h4>${d.name}</h4>
-                <img src="${d.image}" alt="${d.name}">
-                <p>${d.desc}</p>
-                <p><strong>Location:</strong> ${d.location}</p>
-                <p><strong>Owner:</strong> ${d.userEmail}</p>`;
-                c.appendChild(div);
-            });
-        });
-    }
-
-    function loadBothItems() {
-        db.collection('items').where('uid', '==', currentUser.uid).orderBy('timestamp', 'desc').onSnapshot(snap => {
-            const c = document.getElementById('both-items'); c.innerHTML = '';
-            if (snap.empty) { c.innerHTML = '<div class="loading">No items yet</div>'; return; }
-            snap.forEach(doc => {
-                const d = doc.data();
-                const div = document.createElement('div');
-                div.classList.add('item-card');
-                div.innerHTML = `
-                    <h4>${d.name}</h4>
-                    <img src="${d.image}" alt="${d.name}">
-                    <p>${d.desc}</p>
-                    <p><strong>Location:</strong> ${d.location}</p>
-                    <button onclick="deleteItem('${doc.id}')">Delete</button>`;
-                c.appendChild(div);
-            });
-        });
-    }
-
-    window.deleteItem = async function (itemId) {
-        if (!confirm('Delete this item?')) return;
-        try {
-            const doc = await db.collection('items').doc(itemId).get();
-            const imageRef = storage.refFromURL(doc.data().image);
-            await imageRef.delete();
-            await db.collection('items').doc(itemId).delete();
-            alert('Item deleted successfully.');
-        } catch (e) { alert('Error: ' + e.message); }
-    };
-
-    function paystackPayment() {
-        const handler = PaystackPop.setup({
-            key: 'YOUR_PAYSTACK_PUBLIC_KEY', // Replace with your Paystack Public Key
-            email: currentUser.email,
-            amount: 10000, // Amount in kobo (10,000 kobo = 100 naira)
-            currency: "NGN",  // Currency
-            onClose: function() {
-                alert('Payment window closed.');
-            },
-            callback: function(response) {
-                alert('Payment Complete! Reference: ' + response.reference);
-                // Optionally, save payment status in the database for your records
-            }
-        });
-        handler.openIframe();
-    }
+const african = ["Ghana","Nigeria","Kenya","South Africa","Uganda","Tanzania","Rwanda","Egypt","Morocco","Ethiopia","Zambia","Zimbabwe","Cameroon","Senegal","Gambia","Benin","Togo","Mali","Niger","Algeria","Tunisia","Libya","Sudan","South Sudan","Chad","Angola","Mozambique","Botswana","Namibia"];
+const roleSelect = document.getElementById("auth-role");
+roleSelect.innerHTML = `<option value="giver">Giver</option><option value="taker">Taker</option><option value="both">Both</option>`;
+const countrySelect = document.getElementById("auth-country");
+african.forEach(c=>{countrySelect.innerHTML += `<option>${c}</option>`});
+const firebaseConfig = {
+apiKey: "YOUR_API_KEY",
+authDomain: "YOUR_AUTH_DOMAIN",
+projectId: "YOUR_PROJECT_ID",
+storageBucket: "YOUR_BUCKET",
+messagingSenderId: "YOUR_SENDER",
+appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const st = firebase.storage();
+let user = null;
+let role = null;
+let country = null;
+function show(p){["auth","giver","taker","both"].forEach(x=>document.getElementById(x+"-page").classList.add("hidden"));document.getElementById(p+"-page").classList.remove("hidden");}
+document.getElementById("register-btn").onclick = async()=>{
+let e = authEmail.value.trim();
+let p = authPassword.value.trim();
+let r = authRole.value;
+let c = authCountry.value;
+if(!e||p.length<6)return authMsg.textContent="Fill all fields";
+try{
+let u = await auth.createUserWithEmailAndPassword(e,p);
+await db.collection("users").doc(u.user.uid).set({email:e, role:r, country:c, paid:false});
+authMsg.textContent = "Registration successful";
+}catch(err){authMsg.textContent=err.message;}
+};
+document.getElementById("login-btn").onclick = async()=>{
+let e = authEmail.value.trim();
+let p = authPassword.value.trim();
+try{await auth.signInWithEmailAndPassword(e,p);}catch(err){authMsg.textContent=err.message;}
+};
+auth.onAuthStateChanged(async u=>{
+if(!u){user=null;show("auth");return;}
+user=u;
+let d = await db.collection("users").doc(u.uid).get();
+role=d.data().role;
+country=d.data().country;
+let paid=d.data().paid;
+if(role=="giver")show("giver");
+if(role=="taker"){if(!paid)show("taker");else loadTaker();}
+if(role=="both"){if(!paid)show("both");else{loadBoth();}}
+loadGiver();
+});
+function upload(n,d,l,f,p){if(!n||!d||!l||!f)return;let b=document.getElementById(p+"-upload");b.disabled=true;b.textContent="Uploading";let rf=st.ref().child(`items/${user.uid}/${Date.now()}_${f.name}`);rf.put(f).then(s=>s.ref.getDownloadURL()).then(url=>{return db.collection("items").add({uid:user.uid,email:user.email,name:n,desc:d,location:l,image:url,country:country,timestamp:firebase.firestore.FieldValue.serverTimestamp(),available:true});}).then(()=>{b.disabled=false;b.textContent="Upload";document.getElementById(p+"-name").value="";document.getElementById(p+"-desc").value="";document.getElementById(p+"-location").value="";document.getElementById(p+"-img").value="";}).catch(()=>{b.disabled=false;b.textContent="Upload"});}
+document.getElementById("giver-upload").onclick=()=>upload(giverName.value,giverDesc.value,giverLocation.value,giverImg.files[0],"giver");
+document.getElementById("both-upload").onclick=()=>upload(bothName.value,bothDesc.value,bothLocation.value,bothImg.files[0],"both");
+function loadGiver(){if(!user)return;db.collection("items").where("uid","==",user.uid).orderBy("timestamp","desc").onSnapshot(s=>{giverItems.innerHTML="";s.forEach(doc=>{let d=doc.data();giverItems.innerHTML+=`<div class=item><div class=title>${d.name}</div><img src="${d.image}"><div>${d.desc}</div><div>${d.location}</div><button onclick=del('${doc.id}')>Delete</button></div>`});});}
+function loadBoth(){db.collection("items").where("country","==",country).orderBy("timestamp","desc").onSnapshot(s=>{bothItems.innerHTML="";s.forEach(doc=>{let d=doc.data();bothItems.innerHTML+=`<div class=item><div class=title>${d.name}</div><img src="${d.image}"><div>${d.desc}</div><div>${d.location}</div></div>`});});}
+function loadTaker(){db.collection("items").where("country","==",country).orderBy("timestamp","desc").onSnapshot(s=>{takerItems.innerHTML="";s.forEach(doc=>{let d=doc.data();if(d.uid!=user.uid)takerItems.innerHTML+=`<div class=item><div class=title>${d.name}</div><img src="${d.image}"><div>${d.desc}</div><div>${d.location}</div><div>${d.email}</div></div>`});});}
+window.del=id=>{db.collection("items").doc(id).get().then(doc=>st.refFromURL(doc.data().image).delete()).then(()=>db.collection("items").doc(id).delete());};
+document.getElementById("taker-pay").onclick=()=>pay(15,"taker");
+document.getElementById("both-pay").onclick=()=>pay(10,"both");
+function pay(amount,mode){let h=PaystackPop.setup({key:"YOUR_PAYSTACK_PUBLIC_KEY",email:user.email,amount:amount*100,currency:"GHS",callback:r=>{db.collection("users").doc(user.uid).update({paid:true}).then(()=>{if(mode=="taker")loadTaker();if(mode=="both")loadBoth();});}});h.openIframe();}
+document.getElementById("giver-logout").onclick=()=>auth.signOut();
+document.getElementById("taker-logout").onclick=()=>auth.signOut();
+document.getElementById("both-logout").onclick=()=>auth.signOut();
 </script>
-
 </body>
 </html>
